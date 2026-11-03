@@ -1,0 +1,22 @@
+# Root .gitignore
+
+# Android
+.gradle/
+build/
+app/build/
+**/build/
+local.properties
+.cxx/
+*.iml
+.idea/
+
+# iOS / Xcode / Swift
+.DS_Store
+.build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+DerivedData/
+
+# Misc
+*.log
