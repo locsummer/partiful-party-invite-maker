@@ -42,18 +42,34 @@ fun CanvasRendererView(
     onSelectLayer: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     Box(
         modifier = modifier
             .aspectRatio(design.aspectRatio)
-            .pointerInput(isInteractive) {
+            .pointerInput(isInteractive, design.layers) {
                 if (isInteractive) {
                     detectTapGestures { offset ->
-                        // Hit test layer based on coordinates
+                        val scaleX = size.width.toFloat() / design.canvasWidth
+                        val scaleY = size.height.toFloat() / design.canvasHeight
+                        val canvasScale = min(scaleX, scaleY)
+                        val centerX = size.width / 2f
+                        val centerY = size.height / 2f
+
                         val hit = design.layers
                             .sortedByDescending { it.zIndex }
-                            .firstOrNull { !it.isLocked }
+                            .firstOrNull { layer ->
+                                if (layer.isLocked || !layer.isVisible) return@firstOrNull false
+                                val lx = centerX + (layer.x * canvasScale)
+                                val ly = centerY + (layer.y * canvasScale)
+                                val halfW = (layer.width * canvasScale * layer.scale) / 2f + 24f
+                                val halfH = (layer.height * canvasScale * layer.scale) / 2f + 24f
+                                offset.x in (lx - halfW)..(lx + halfW) && offset.y in (ly - halfH)..(ly + halfH)
+                            }
                         if (hit != null) {
                             onSelectLayer?.invoke(hit.id)
+                        } else {
+                            onSelectLayer?.invoke("")
                         }
                     }
                 }
@@ -80,7 +96,7 @@ fun CanvasRendererView(
                         when (layer.type) {
                             LayerType.TEXT -> drawTextLayer(layer, canvasScale, layerCenterX, layerCenterY)
                             LayerType.STICKER -> drawStickerLayer(layer, canvasScale, layerCenterX, layerCenterY)
-                            LayerType.IMAGE -> drawPlaceholderImageLayer(layer, canvasScale, layerCenterX, layerCenterY)
+                            LayerType.IMAGE -> drawRealImageLayer(context, layer, canvasScale, layerCenterX, layerCenterY)
                             LayerType.BACKGROUND -> {}
                         }
 
@@ -216,7 +232,8 @@ private fun DrawScope.drawStickerLayer(
     nativeCanvas.drawText(symbolChar, centerX, centerY + (radius / 3f), textPaint)
 }
 
-private fun DrawScope.drawPlaceholderImageLayer(
+private fun DrawScope.drawRealImageLayer(
+    context: Context,
     layer: CanvasLayer,
     canvasScale: Float,
     centerX: Float,
@@ -224,6 +241,26 @@ private fun DrawScope.drawPlaceholderImageLayer(
 ) {
     val halfW = (layer.width * canvasScale) / 2f
     val halfH = (layer.height * canvasScale) / 2f
+    val data = layer.imageData
+
+    if (data?.localImagePath != null) {
+        val file = File(context.filesDir, data.localImagePath)
+        if (file.exists()) {
+            val imgBitmap = BitmapFactory.decodeFile(file.absolutePath)
+            if (imgBitmap != null) {
+                val nativeCanvas = drawContext.canvas.nativeCanvas
+                val imgPaint = Paint().apply {
+                    isAntiAlias = true
+                    val cm = ColorMatrix().apply {
+                        setSaturation(data.filter.saturation)
+                    }
+                    colorFilter = ColorMatrixColorFilter(cm)
+                }
+                nativeCanvas.drawBitmap(imgBitmap, null, RectF(centerX - halfW, centerY - halfH, centerX + halfW, centerY + halfH), imgPaint)
+                return
+            }
+        }
+    }
 
     drawRoundRect(
         color = AppThemeColors.SurfaceElevated,

@@ -120,9 +120,12 @@ fun CardEditorScreen(
                 design = design,
                 selectedLayerId = selectedId,
                 isInteractive = true,
-                onSelectLayer = { id -> viewModel.selectLayer(id) },
+                onSelectLayer = { id ->
+                    if (id.isNotEmpty()) viewModel.selectLayer(id) else viewModel.deselectLayer()
+                },
                 modifier = Modifier
-                    .fillMaxHeight(0.92f)
+                    .fillMaxHeight(0.95f)
+                    .fillMaxWidth(0.92f)
                     .clip(RoundedCornerShape(20.dp))
                     .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = AppThemeColors.BrightViolet)
             )

@@ -45,6 +45,10 @@ fun MainNavigation() {
         }
     }
 
+    androidx.activity.compose.BackHandler(enabled = screenStack.size > 1) {
+        navigateBack()
+    }
+
     Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
         when (screen) {
             is ScreenState.Splash -> {

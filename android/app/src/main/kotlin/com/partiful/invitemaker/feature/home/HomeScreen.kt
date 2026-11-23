@@ -265,20 +265,29 @@ fun HomeScreen(
                 }
 
                 val currentTemplates = TemplateRepository.getTemplates(selectedCategory)
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.height(600.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(currentTemplates) { tpl ->
-                        TemplateCardItem(
-                            template = tpl,
-                            width = null,
-                            height = 240.dp,
-                            onClick = { onSelectTemplate(tpl) }
-                        )
+                    currentTemplates.chunked(2).forEach { rowTemplates ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            rowTemplates.forEach { tpl ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    TemplateCardItem(
+                                        template = tpl,
+                                        width = null,
+                                        height = 240.dp,
+                                        onClick = { onSelectTemplate(tpl) }
+                                    )
+                                }
+                            }
+                            if (rowTemplates.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }

@@ -75,7 +75,7 @@ fun TemplateDetailScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = template.name,
                             fontSize = 22.sp,
@@ -90,7 +90,7 @@ fun TemplateDetailScreen(
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        template.tags.forEach { tag ->
+                        template.tags.take(2).forEach { tag ->
                             Text("#$tag", color = AppThemeColors.TextSecondary, fontSize = 12.sp)
                         }
                     }
